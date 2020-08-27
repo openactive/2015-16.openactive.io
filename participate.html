@@ -59,7 +59,7 @@
         <p>The OpenActive message can be freely and easily shared by anyone, whether they are a Pioneer or not. The content here is all openly licensed, so you are free to share, edit and re-use it in any way you see fit (just make sure you keep the OPENACTIVE.IO&nbsp;attribution intact). The materials below are designed to help those who see the benefits of open data in our sector spread the word and work of the community and move our sector forward.</p>
         <h3>sUPPOrT THE COMMUNITY</h3>
         <p>Use the OpenActive logo on your site to represent your support for OpenActive. <a href="https://github.com/openactive/assets">Download or link to logos and badges here</a>. For example:</p>
-        <div class="w-embed"><img src="https://www.openactive.io/assets/openactive-logo-small.png" height="30">
+        <div class="w-embed"><img src="https://openactive.io/assets/openactive-logo-small.png" height="30">
         </div>
         <h3>CONTRIBUTiON WELCOME</h3>
         <p>Please feel free to comment on the slides provided on this page, we are always trying to make the content clearer and more concise.</p>
@@ -166,12 +166,6 @@
         	console.log( "Error accessing GitHub: " + err );
         });
     }
-    function gitHubGetForks(success) {
-        var url = 'https://api.github.com/repos/openactive/dataset-site-generator/forks?sort=oldest';
-        loadJSON(url, function (jsonBody) {
-            success(jsonBody);
-        });
-    }
     function addRow(metadata) {
       console.log("Metadata for!: " + metadata["dataset-site-url"] );
        var newRow = $( "#use-data-template" ).clone();
@@ -184,52 +178,25 @@
        newRow.appendTo( "#pioneers-section-list" );
        newRow.show();
     }
-    function incrementCounter(queue, counter) {
-      var url = queue.pop();
-      if (url) {
-        $.getJSON(url, function (metadata) {
-            //Only continue if load successful, ignore failure
-            console.log("Metadata for: " + metadata["dataset-site-url"] + " (Publish: " + metadata["publish"] + ")");
-            if (metadata["publish"]) {
-              counter ++;
-              $( "#metric-live" ).text(counter);
-            }
-            incrementCounter(queue, counter);
-        }).fail(function() {
-            console.log("Error accessing: " + url);
-            incrementCounter(queue, counter);
-        });
-      } else {
-        // End of the list, do nothing
-      }
-    }
     /* 
      * On Page Load
      */
     $(function() {
         $( "#use-data-template" ).each(function() {
           $( this ).hide();
-          gitHubGetForks(function (body) {
-              for(var i = 0; i < body.length; i++) {
-                  console.log("Found: " + body[i].full_name );
-                  $.getJSON("https://raw.githubusercontent.com/" + body[i].full_name + "/master/metadata.json", function (metadata) {
-                     //Only continue if load successful, ignore failure
-                     console.log("Metadata for: " + metadata["dataset-site-url"] + " (Publish: " + metadata["publish"] + ")");
-                     if (metadata["publish"]) {
-                        addRow(metadata);
-                     }
-                  });
+          $.getJSON( "/datasets/directory.json", function( body ) {
+            for(var i = 0; i < body.length; i++) {
+              var metadata = body[i];
+              console.log("Metadata for: " + metadata["dataset-site-url"] + " (Publish: " + metadata["publish"] + ")");
+              if (metadata["publish"]) {
+                addRow(metadata);
               }
+            }
           });
         });
         $( "#metric-live" ).each(function() {
-          gitHubGetForks(function (body) {
-              var queue = [];
-              for(var i = 0; i < body.length; i++) {
-                  console.log("Found: " + body[i].full_name );
-                  queue.push("https://raw.githubusercontent.com/" + body[i].full_name + "/master/metadata.json");
-              }
-              incrementCounter(queue, 0);
+          $.getJSON( "/datasets/directory.json", function( data ) {
+            $( "#metric-live" ).text(data.length)
           });
         });
     });

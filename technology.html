@@ -122,13 +122,13 @@
         <p class="whitetext">If you <strong>do not</strong> own the data (e.g. in the case of a booking system provider), then you need to&nbsp;amend your terms and conditions to indicate that your users' sessions will be published openly. You may also give your users an option to opt-out of session publishing, while sending them an e-mail notifying them that you are turning data sharing on.</p>
         <p class="whitetext">A simple addition to your Terms and Conditions similar to the following:</p>
         <p class="quote whitetext"><strong>Publishing Sessions Openly</strong>
-          <br>Information about your session that is already available publicly (e.g. title, location, description, date/time, price, images) will be published as open data for anyone to access, use and share, licensed under the <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution License (cc-by) version 4</a>. This gives your sessions more visibility by publishing them openly to apps and websites that will help you promote your sessions, including but not limited to those listed <a target="_blank" href="https://www.openactive.io/pioneers.html">here</a>. This will help more people find your sessions, and will not incur any additional cost to you. [You may opt-out of this free service in your settings page.]</p>
+          <br>Information about your session that is already available publicly (e.g. title, location, description, date/time, price, images) will be published as open data for anyone to access, use and share, licensed under the <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution License (cc-by) version 4</a>. This gives your sessions more visibility by publishing them openly to apps and websites that will help you promote your sessions, including but not limited to those listed <a target="_blank" href="/pioneers.html">here</a>. This will help more people find your sessions, and will not incur any additional cost to you. [You may opt-out of this free service in your settings page.]</p>
         <p class="whitetext">A simple opt-out checkbox visible in your application as below:</p><img class="tickbox" src="images/tick.png">
         <p class="whitetext"><strong>Publish Sessions Openly</strong>
-          <br>Information about your sessions that is already available publicly (e.g. title, location, description, date/time, price, images) is published for anyone to access, use and share. This helps more people find your sessions, by making them visible on other apps and websites such as the ones listed <a target="_blank" href="https://www.openactive.io/pioneers.html">here</a>. This does not incur any additional cost to you.</p>
+          <br>Information about your sessions that is already available publicly (e.g. title, location, description, date/time, price, images) is published for anyone to access, use and share. This helps more people find your sessions, by making them visible on other apps and websites such as the ones listed <a target="_blank" href="/pioneers.html">here</a>. This does not incur any additional cost to you.</p>
         <p class="whitetext">A simple e-mail alert similar to the following:</p>
         <p class="quote whitetext"><strong>Publishing Sessions Openly</strong>
-          <br>We are now giving your sessions more visibility by publishing information about them that is already available publicly (e.g. title, location, description, date/time, price, images) openly to apps and websites that will help you promote your sessions, such as the ones listed <a target="_blank" href="https://www.openactive.io/pioneers.html">here</a>. This will help more people find your sessions, and will not incur any additional cost to you. If you want to opt-out of this free service, <a href="#">click here</a> to go to your settings page.</p>
+          <br>We are now giving your sessions more visibility by publishing information about them that is already available publicly (e.g. title, location, description, date/time, price, images) openly to apps and websites that will help you promote your sessions, such as the ones listed <a target="_blank" href="/pioneers.html">here</a>. This will help more people find your sessions, and will not incur any additional cost to you. If you want to opt-out of this free service, <a href="#">click here</a> to go to your settings page.</p>
         <h3 class="whitetext">4) CREATE A&nbsp;DATASET HOMEPAGE</h3>
         <h4>(estimated time to complete: 1.5 hours)</h4>
         <p class="whitetext">To publish open data for anyone to freely access, use and share, you must create a webpage that describes the data you are publishing. You must include relevant human and machine readable licensing information, documentation, a mailing list, and ideally an issue tracker. You must also specify how dataset users (innovators who want to build on top of/use your data) should attribute your data.</p>
@@ -218,12 +218,6 @@
         	console.log( "Error accessing GitHub: " + err );
         });
     }
-    function gitHubGetForks(success) {
-        var url = 'https://api.github.com/repos/openactive/dataset-site-generator/forks?sort=oldest';
-        loadJSON(url, function (jsonBody) {
-            success(jsonBody);
-        });
-    }
     function addRow(metadata) {
       console.log("Metadata for!: " + metadata["dataset-site-url"] );
        var newRow = $( "#use-data-template" ).clone();
@@ -236,52 +230,25 @@
        newRow.appendTo( "#pioneers-section-list" );
        newRow.show();
     }
-    function incrementCounter(queue, counter) {
-      var url = queue.pop();
-      if (url) {
-        $.getJSON(url, function (metadata) {
-            //Only continue if load successful, ignore failure
-            console.log("Metadata for: " + metadata["dataset-site-url"] + " (Publish: " + metadata["publish"] + ")");
-            if (metadata["publish"]) {
-              counter ++;
-              $( "#metric-live" ).text(counter);
-            }
-            incrementCounter(queue, counter);
-        }).fail(function() {
-            console.log("Error accessing: " + url);
-            incrementCounter(queue, counter);
-        });
-      } else {
-        // End of the list, do nothing
-      }
-    }
     /* 
      * On Page Load
      */
     $(function() {
         $( "#use-data-template" ).each(function() {
           $( this ).hide();
-          gitHubGetForks(function (body) {
-              for(var i = 0; i < body.length; i++) {
-                  console.log("Found: " + body[i].full_name );
-                  $.getJSON("https://raw.githubusercontent.com/" + body[i].full_name + "/master/metadata.json", function (metadata) {
-                     //Only continue if load successful, ignore failure
-                     console.log("Metadata for: " + metadata["dataset-site-url"] + " (Publish: " + metadata["publish"] + ")");
-                     if (metadata["publish"]) {
-                        addRow(metadata);
-                     }
-                  });
+          $.getJSON( "/datasets/directory.json", function( body ) {
+            for(var i = 0; i < body.length; i++) {
+              var metadata = body[i];
+              console.log("Metadata for: " + metadata["dataset-site-url"] + " (Publish: " + metadata["publish"] + ")");
+              if (metadata["publish"]) {
+                addRow(metadata);
               }
+            }
           });
         });
         $( "#metric-live" ).each(function() {
-          gitHubGetForks(function (body) {
-              var queue = [];
-              for(var i = 0; i < body.length; i++) {
-                  console.log("Found: " + body[i].full_name );
-                  queue.push("https://raw.githubusercontent.com/" + body[i].full_name + "/master/metadata.json");
-              }
-              incrementCounter(queue, 0);
+          $.getJSON( "/datasets/directory.json", function( data ) {
+            $( "#metric-live" ).text(data.length)
           });
         });
     });

@@ -136,12 +136,6 @@
         	console.log( "Error accessing GitHub: " + err );
         });
     }
-    function gitHubGetForks(success) {
-        var url = 'https://api.github.com/repos/openactive/dataset-site-generator/forks?sort=oldest';
-        loadJSON(url, function (jsonBody) {
-            success(jsonBody);
-        });
-    }
     function addRow(metadata) {
       console.log("Metadata for!: " + metadata["dataset-site-url"] );
        var newRow = $( "#use-data-template" ).clone();
@@ -154,52 +148,25 @@
        newRow.appendTo( "#pioneers-section-list" );
        newRow.show();
     }
-    function incrementCounter(queue, counter) {
-      var url = queue.pop();
-      if (url) {
-        $.getJSON(url, function (metadata) {
-            //Only continue if load successful, ignore failure
-            console.log("Metadata for: " + metadata["dataset-site-url"] + " (Publish: " + metadata["publish"] + ")");
-            if (metadata["publish"]) {
-              counter ++;
-              $( "#metric-live" ).text(counter);
-            }
-            incrementCounter(queue, counter);
-        }).fail(function() {
-            console.log("Error accessing: " + url);
-            incrementCounter(queue, counter);
-        });
-      } else {
-        // End of the list, do nothing
-      }
-    }
     /* 
      * On Page Load
      */
     $(function() {
         $( "#use-data-template" ).each(function() {
           $( this ).hide();
-          gitHubGetForks(function (body) {
-              for(var i = 0; i < body.length; i++) {
-                  console.log("Found: " + body[i].full_name );
-                  $.getJSON("https://raw.githubusercontent.com/" + body[i].full_name + "/master/metadata.json", function (metadata) {
-                     //Only continue if load successful, ignore failure
-                     console.log("Metadata for: " + metadata["dataset-site-url"] + " (Publish: " + metadata["publish"] + ")");
-                     if (metadata["publish"]) {
-                        addRow(metadata);
-                     }
-                  });
+          $.getJSON( "/datasets/directory.json", function( body ) {
+            for(var i = 0; i < body.length; i++) {
+              var metadata = body[i];
+              console.log("Metadata for: " + metadata["dataset-site-url"] + " (Publish: " + metadata["publish"] + ")");
+              if (metadata["publish"]) {
+                addRow(metadata);
               }
+            }
           });
         });
         $( "#metric-live" ).each(function() {
-          gitHubGetForks(function (body) {
-              var queue = [];
-              for(var i = 0; i < body.length; i++) {
-                  console.log("Found: " + body[i].full_name );
-                  queue.push("https://raw.githubusercontent.com/" + body[i].full_name + "/master/metadata.json");
-              }
-              incrementCounter(queue, 0);
+          $.getJSON( "/datasets/directory.json", function( data ) {
+            $( "#metric-live" ).text(data.length)
           });
         });
     });
