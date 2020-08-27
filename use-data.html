@@ -210,13 +210,6 @@
         });
       });
     });
-    $(function() {
-      $( "#metric-impl" ).each(function() {
-        $.getJSON( "https://api.github.com/repos/openactive/activation/milestones?state=all", function( data ) {
-          $( "#metric-impl" ).text(data.length)
-        });
-      });
-    });
   </script>
 </body>
 </html>
